@@ -266,26 +266,32 @@ add_action('wp_head', 'my_custom_customizer_css');
 function my_custom_theme_scripts() {
     ?>
     <script type="text/javascript">
-        document.addEventListener('visibilitychange', function() {
-            if (document.visibilityState === 'hidden') {
-                // Change favicon
-                var exitFaviconUrl = "<?php echo esc_url(get_theme_mod('exit_favicon')); ?>";
-                var link = document.querySelector('link[rel="icon"]') || document.createElement('link');
-                link.type = 'image/png';
-                link.rel = 'icon';
-                link.href = exitFaviconUrl;
-                document.head.appendChild(link);
+        document.addEventListener('DOMContentLoaded', function() {
+            // Store the original title and favicon URL
+            var originalTitle = document.title;
+            var defaultFavicon = "<?php echo esc_url(get_site_icon_url()); ?>";
+            var exitFaviconUrl = "<?php echo esc_url(get_theme_mod('exit_favicon')); ?>";
+            var exitTitle = "<?php echo esc_js(get_theme_mod('exit_title', 'Come Back!')); ?>";
 
-                // Change tab title
-                document.title = "<?php echo esc_js(get_theme_mod('exit_title')); ?>";
-            } else {
-                // Reset favicon and title when tab is active again
-                var defaultFavicon = "<?php echo esc_url(get_site_icon_url()); ?>";
-                document.querySelector('link[rel="icon"]').href = defaultFavicon;
-                document.title = "<?php bloginfo('name'); ?>";
-            }
+            // Set up the favicon element if it doesn't exist
+            var link = document.querySelector('link[rel="icon"]') || document.createElement('link');
+            link.type = 'image/png';
+            link.rel = 'icon';
+            document.head.appendChild(link);
+
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'hidden') {
+                    // Change favicon and title when the tab is hidden
+                    link.href = exitFaviconUrl;
+                    document.title = exitTitle;
+                } else {
+                    // Restore favicon and title when the tab is active again
+                    link.href = defaultFavicon;
+                    document.title = originalTitle;
+                }
+            });
         });
     </script>
     <?php
 }
-add_action('wp_footer', 'my_custom_theme_scripts');
+add_action('wp_head', 'my_custom_theme_scripts');
